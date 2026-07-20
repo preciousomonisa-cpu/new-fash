@@ -1,9 +1,9 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Atelier Notes</title>
+  <title>Adora Notes</title>
   <style>
     :root { --ink:#27231f; --paper:#f9f6f0; --cream:#eee7dc; --accent:#b65f47; --deep:#743b2c; --line:#ddd3c5; --muted:#797069; --white:#fffdf9; }
     * { box-sizing:border-box; } body { margin:0; color:var(--ink); font-family:Arial, sans-serif; background:var(--paper); }
@@ -31,7 +31,7 @@
   </style>
 </head>
 <body>
-  <header><div class="brand">Atelier <span>Notes</span></div><div class="save-state"><i class="dot"></i><span id="saveStatus">Saved on this device</span></div></header>
+  <header><div class="brand">Dora <span>Notes</span></div><div class="save-state"><i class="dot"></i><span id="saveStatus">Saved on this device</span></div></header>
   <main>
     <aside><button class="new-client" id="newBtn">+ New client</button><input class="search" id="search" placeholder="Search clients" /><div class="label">Your clients</div><div id="clientList"></div></aside>
     <section id="workspace"><div class="placeholder"><h1>Your fitting room, organized.</h1><p>Create a client card to record measurements, sketch looks, and keep your atelier notes together.</p></div></section>
@@ -54,173 +54,277 @@
     function deleteCurrent(){if(confirm(`Delete ${current().name}'s record? This cannot be undone.`)){clients=clients.filter(c=>c.id!==currentId);currentId=null;save();document.getElementById('workspace').innerHTML='<div class="placeholder"><h1>Record removed.</h1><p>Create or select a client to continue.</p></div>';}}
     document.getElementById('newBtn').onclick=()=>{document.getElementById('modal').classList.add('show');setTimeout(()=>document.getElementById('newName').focus(),0)};document.getElementById('cancel').onclick=()=>document.getElementById('modal').classList.remove('show');function create(){let n=document.getElementById('newName');let name=n.value.trim();if(!name)return n.focus();let c={id:crypto.randomUUID(),name,phone:'',email:'',garment:'',date:new Date().toISOString().slice(0,10),style:'',notes:'',measurements:{},sketch:'',updated:'Just now'};clients.unshift(c);currentId=c.id;n.value='';document.getElementById('modal').classList.remove('show');save();openClient(c.id);}document.getElementById('create').onclick=create;document.getElementById('newName').onkeydown=e=>{if(e.key==='Enter')create()};document.getElementById('search').oninput=renderList;renderList();if(clients.length)openClient(clients[0].id);
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    /* Supabase cloud sync — paste your project values below. Never use a service_role key here. */
-    (() => {
-      const SUPABASE_URL = 'https://ilpldwjayyskrtqtfxfg.supabase.co/rest/v1/L';
-      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_GOVQ-RhGFDECrDyJ0xkSGw_uzr7yB_G';
-      const CLOUD_TABLE = 'atelier_clients';
-      const configured = !SUPABASE_URL.startsWith('YOUR_') && !SUPABASE_PUBLISHABLE_KEY.startsWith('YOUR_');
-      let supabaseClient = null;
-      let cloudTimer = null;
+(() => {
+  const TRASH_KEY = "atelier-notes-trash-v1";
+  const CUSTOM_MEASURES_KEY = "atelier-notes-custom-measures-v1";
+  const TEN_DAYS = 10 * 24 * 60 * 60 * 1000;
 
-      const cloudButton = document.createElement('button');
-      cloudButton.type = 'button';
-      cloudButton.className = 'secondary';
-      cloudButton.style.cssText = 'margin-left:14px;min-height:34px;padding:7px 10px;white-space:nowrap;';
-      document.querySelector('header').appendChild(cloudButton);
+  function readStorage(key, fallback) {
+    try {
+      return JSON.parse(localStorage.getItem(key)) || fallback;
+    } catch {
+      return fallback;
+    }
+  }
 
-      function setCloudStatus(message) {
-        document.getElementById('saveStatus').textContent = message;
-      }
+  let trash = readStorage(TRASH_KEY, []);
+  const customMeasures = readStorage(CUSTOM_MEASURES_KEY, []);
 
-      function setCloudButton(session) {
-        cloudButton.textContent = session ? 'Cloud: signed in' : 'Cloud sign in';
-      }
+  // Permanently remove items that have stayed in the Bin for 10 days.
+  function purgeExpiredTrash() {
+    const now = Date.now();
+    trash = trash.filter(record => now - record.deletedAt < TEN_DAYS);
+    localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
+  }
 
-      async function getSession() {
-        if (!supabaseClient) return null;
-        const { data } = await supabaseClient.auth.getSession();
-        return data.session;
-      }
+  function saveTrash() {
+    purgeExpiredTrash();
+    localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
+    refreshBinButton();
+  }
 
-      async function uploadCloud() {
-        const session = await getSession();
-        if (!session || !clients.length) return;
+  // Add saved custom measurements to the app's existing measurement list.
+  customMeasures.forEach(name => {
+    if (typeof name === "string" && name.trim() && !measures.includes(name.trim())) {
+      measures.push(name.trim());
+    }
+  });
 
-        const rows = clients.map(client => ({
-          id: client.id,
-          user_id: session.user.id,
-          payload: client,
-          updated_at: new Date().toISOString()
-        }));
+  function addMeasurementInput(name) {
+    const grid = document.querySelector(".measure-grid");
+    if (!grid) return;
 
-        const { error } = await supabaseClient
-          .from(CLOUD_TABLE)
-          .upsert(rows, { onConflict: 'id' });
+    const unit = document.createElement("div");
+    unit.className = "unit";
 
-        if (error) throw error;
-      }
+    const label = document.createElement("label");
+    label.textContent = name;
 
-      async function downloadCloud() {
-        const session = await getSession();
-        if (!session) return;
+    const input = document.createElement("input");
+    input.setAttribute("data-measure", name);
+    input.setAttribute("inputmode", "decimal");
+    input.placeholder = "—";
 
-        const { data, error } = await supabaseClient
-          .from(CLOUD_TABLE)
-          .select('id, payload, updated_at')
-          .order('updated_at', { ascending: false });
+    const cm = document.createElement("em");
+    cm.textContent = "cm";
 
-        if (error) throw error;
+    unit.append(label, input, cm);
+    grid.appendChild(unit);
+  }
 
-        const localById = new Map(clients.map(client => [client.id, client]));
-        (data || []).forEach(row => localById.set(row.id, row.payload));
-        clients = Array.from(localById.values());
-        localSave();
-      }
+  function installMeasurementButton() {
+    const measurementSection = document.querySelector(".measurements");
+    if (!measurementSection || document.getElementById("addMeasurementOption")) return;
 
-      async function syncCloud() {
-        try {
-          setCloudStatus('Syncing securely…');
-          await downloadCloud();
-          await uploadCloud();
-          setCloudStatus('Synced to your private cloud');
-        } catch (error) {
-          console.error(error);
-          setCloudStatus('Cloud sync needs attention');
-        }
-      }
+    const button = document.createElement("button");
+    button.id = "addMeasurementOption";
+    button.type = "button";
+    button.textContent = "+ Add measurement option";
 
-      function queueCloudSync() {
-        clearTimeout(cloudTimer);
-        cloudTimer = setTimeout(syncCloud, 700);
-      }
+    button.addEventListener("click", () => {
+      const enteredName = prompt("Name this new measurement option (example: Calf):");
+      const name = enteredName?.trim();
 
-      const localSave = save;
-      save = function () {
-        localSave();
-        if (supabaseClient) queueCloudSync();
-      };
+      if (!name) return;
 
-      const localDelete = deleteCurrent;
-      deleteCurrent = function () {
-        const deletedId = currentId;
-        localDelete();
-
-        if (deletedId && !clients.some(client => client.id === deletedId) && supabaseClient) {
-          getSession().then(session => {
-            if (!session) return;
-            return supabaseClient.from(CLOUD_TABLE).delete().eq('id', deletedId);
-          }).then(({ error } = {}) => {
-            if (error) console.error(error);
-          });
-        }
-      };
-
-      async function signInOrCreateAccount() {
-        const email = prompt('Email address for cloud backup:');
-        if (!email) return;
-        const password = prompt('Password (at least 6 characters):');
-        if (!password) return;
-
-        const createAccount = confirm('Create a new account?\n\nChoose Cancel if you already have one and want to sign in.');
-        const result = createAccount
-          ? await supabaseClient.auth.signUp({ email, password })
-          : await supabaseClient.auth.signInWithPassword({ email, password });
-
-        if (result.error) {
-          alert(result.error.message);
-          return;
-        }
-
-        if (!result.data.session) {
-          alert('Check your email to confirm your account, then return here and sign in.');
-          return;
-        }
-
-        setCloudButton(result.data.session);
-        await syncCloud();
-      }
-
-      cloudButton.addEventListener('click', async () => {
-        if (!configured) {
-          alert('Add your Supabase URL and publishable/anon key in the cloud-sync section of this file first.');
-          return;
-        }
-
-        const session = await getSession();
-        if (session) {
-          if (confirm('Sign out from cloud backup on this device?')) {
-            await supabaseClient.auth.signOut({ scope: 'local' });
-            setCloudButton(null);
-            setCloudStatus('Saved on this device');
-          }
-          return;
-        }
-
-        await signInOrCreateAccount();
-      });
-
-      if (!configured) {
-        setCloudButton(null);
+      if (measures.some(item => item.toLowerCase() === name.toLowerCase())) {
+        alert("That measurement option already exists.");
         return;
       }
 
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-        auth: { persistSession: true, autoRefreshToken: true }
+      measures.push(name);
+      customMeasures.push(name);
+      localStorage.setItem(CUSTOM_MEASURES_KEY, JSON.stringify(customMeasures));
+
+      addMeasurementInput(name);
+    });
+
+    measurementSection.appendChild(button);
+  }
+
+  // Replaces the existing permanent-delete action with a 10-day recoverable Bin.
+  deleteCurrent = function () {
+    const client = current();
+
+    if (!client) return;
+
+    const shouldDelete = confirm(
+      `Move ${client.name}'s measurement record to the Bin?\n\nYou can restore it for the next 10 days.`
+    );
+
+    if (!shouldDelete) return;
+
+    const index = clients.findIndex(clientRecord => clientRecord.id === currentId);
+
+    if (index === -1) return;
+
+    const [removedClient] = clients.splice(index, 1);
+
+    trash.unshift({
+      ...removedClient,
+      deletedAt: Date.now()
+    });
+
+    currentId = null;
+    saveTrash();
+    save();
+
+    document.getElementById("workspace").innerHTML = `
+      <div class="placeholder">
+        <h1>Record moved to Bin.</h1>
+        <p>You can restore it within 10 days.</p>
+      </div>
+    `;
+  };
+
+  function refreshBinButton() {
+    const binButton = document.getElementById("openBinButton");
+
+    if (binButton) {
+      binButton.textContent = `Bin (${trash.length})`;
+    }
+  }
+
+  function showBin() {
+    purgeExpiredTrash();
+    currentId = null;
+    renderList();
+
+    const workspace = document.getElementById("workspace");
+
+    if (!trash.length) {
+      workspace.innerHTML = `
+        <div class="placeholder">
+          <h1>Your Bin is empty.</h1>
+          <p>Deleted client measurement records stay here for 10 days.</p>
+        </div>
+      `;
+      return;
+    }
+
+    workspace.innerHTML = `
+      <div class="top">
+        <div>
+          <div class="eyebrow">Recovery area</div>
+          <h1 class="serif" style="margin:0;font-size:37px">Deleted records</h1>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:29px">
+        <div class="card-head">
+          <h2>Bin</h2>
+          <span>Records are removed permanently after 10 days</span>
+        </div>
+
+        <div id="binRecords"></div>
+      </div>
+    `;
+
+    const binRecords = document.getElementById("binRecords");
+
+    trash.forEach(record => {
+      const daysLeft = Math.max(
+        0,
+        Math.ceil((TEN_DAYS - (Date.now() - record.deletedAt)) / (24 * 60 * 60 * 1000))
+      );
+
+      const item = document.createElement("div");
+      item.style.cssText =
+        "padding:17px 20px;border-bottom:1px solid var(--cream);display:flex;justify-content:space-between;align-items:center;gap:16px;";
+
+      const details = document.createElement("div");
+      details.innerHTML = `
+        <strong style="display:block;margin-bottom:4px">${esc(record.name)}</strong>
+        <small style="color:var(--muted)">Available to restore for ${daysLeft} day${daysLeft === 1 ? "" : "s"}</small>
+      `;
+
+      const restoreButton = document.createElement("button");
+      restoreButton.className = "primary";
+      restoreButton.type = "button";
+      restoreButton.textContent = "Restore";
+
+      restoreButton.addEventListener("click", () => {
+        const recordIndex = trash.findIndex(item => item.id === record.id);
+
+        if (recordIndex === -1) return;
+
+        const [restoredRecord] = trash.splice(recordIndex, 1);
+        delete restoredRecord.deletedAt;
+
+        restoredRecord.updated = "Restored " + new Date().toLocaleDateString(
+          undefined,
+          { month: "short", day: "numeric", year: "numeric" }
+        );
+
+        clients.unshift(restoredRecord);
+        saveTrash();
+        save();
+        openClient(restoredRecord.id);
       });
 
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
-        setCloudButton(session);
-        if (session) syncCloud();
-      });
+      item.append(details, restoreButton);
+      binRecords.appendChild(item);
+    });
+  }
 
-      getSession().then(session => {
-        setCloudButton(session);
-        if (session) syncCloud();
-      });
-    })();
-  </script>
+  function installBinButton() {
+    if (document.getElementById("openBinButton")) return;
+
+    const binButton = document.createElement("button");
+    binButton.id = "openBinButton";
+    binButton.type = "button";
+    binButton.className = "secondary";
+    binButton.style.cssText = "width:100%;margin-top:10px;";
+    binButton.addEventListener("click", showBin);
+
+    document.getElementById("newBtn").insertAdjacentElement("afterend", binButton);
+    refreshBinButton();
+  }
+
+  // Add styling without altering the existing stylesheet.
+  const style = document.createElement("style");
+  style.textContent = `
+    #addMeasurementOption {
+      margin-top: 16px;
+      padding: 9px 0;
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #addMeasurementOption:hover {
+      color: var(--deep);
+    }
+
+    @media (max-width: 700px) {
+      #openBinButton {
+        width: auto !important;
+        margin: 0 !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Detect whenever a client card is opened and add the measurement button.
+  const workspace = document.getElementById("workspace");
+  new MutationObserver(installMeasurementButton).observe(workspace, {
+    childList: true,
+    subtree: true
+  });
+
+  purgeExpiredTrash();
+  installBinButton();
+
+  // Refresh the first opened client so saved custom fields appear immediately.
+  if (currentId) {
+    openClient(currentId);
+  }
+
+  installMeasurementButton();
+})();
+</script>
 </body>
-</html>
+</html> -->

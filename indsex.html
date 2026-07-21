@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -25,7 +25,6 @@
     .client-form { padding:18px 20px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }.field { display:grid; gap:6px; }.field.full{grid-column:1/-1}.field label,.measurements label{font-size:11px;letter-spacing:.8px;text-transform:uppercase;font-weight:bold;color:var(--muted)} input,textarea,select { font:14px Arial,sans-serif; color:var(--ink); border:1px solid var(--line); border-radius:4px; padding:10px; background:#fffefa; width:100%; } textarea { resize:vertical; min-height:74px; }.measurements { padding:19px 20px 22px; }.measurements h3 { margin:0 0 15px;font:700 18px Georgia,serif; }.measure-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }.unit { position:relative; }.unit input{padding-right:28px}.unit em{position:absolute;right:10px;bottom:11px;color:var(--muted);font-size:11px;font-style:normal}
     .sketch-tools { padding:10px 16px; display:flex; align-items:center; justify-content:space-between; background:#fcfaf6; border-bottom:1px solid var(--cream); }.tool-group{display:flex;align-items:center;gap:10px}.tool-group label{font-size:12px;color:var(--muted)} #color{height:30px;width:36px;padding:2px;border-radius:4px} #size{width:86px}.clear{border:0;background:transparent;color:var(--accent);font-weight:bold;cursor:pointer;font-size:12px}.canvas-wrap { padding:16px; background:#f7f2ea; }.canvas-box { background:white; border:1px solid var(--line); border-radius:4px; overflow:hidden; aspect-ratio:1.25; } canvas { display:block; width:100%; height:100%; cursor:crosshair; touch-action:none; }.sketch-foot{padding:12px 17px;color:var(--muted);font-size:12px;}
     .notes { margin-top:26px; }.notes textarea{min-height:104px;border:0;padding:18px;line-height:1.55}.placeholder { text-align:center; padding:92px 20px; color:var(--muted); }.placeholder h1{font:700 31px Georgia,serif;color:var(--ink);margin:0 0 10px}.modal { position:fixed;inset:0;background:rgba(39,35,31,.36);display:none;align-items:center;justify-content:center;padding:20px; }.modal.show{display:flex}.modal-box{width:390px;background:var(--white);padding:28px;border-radius:9px;box-shadow:0 20px 60px #34261d55}.modal-box h2{font:700 25px Georgia,serif;margin:0 0 9px}.modal-box p{font-size:14px;color:var(--muted);line-height:1.5}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-    .notepad-home{max-width:760px;margin:8vh auto 0;background:repeating-linear-gradient(var(--white) 0 31px,#e6ddd1 32px);border:1px solid var(--line);border-radius:8px;min-height:410px;padding:58px clamp(28px,7vw,80px);box-shadow:12px 13px 0 #e7ded3}.notepad-home h1{font:700 clamp(35px,6vw,57px) Georgia,serif;margin:0 0 18px}.notepad-home p{max-width:520px;font-size:17px;line-height:1.85;color:var(--muted)}.notepad-home .primary{margin-top:22px}.signed-out aside .search,.signed-out aside .label{display:none}.signed-out #clientList{margin-top:18px}
     @media(max-width:980px){main{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line);padding:14px 18px;display:grid;grid-template-columns:auto minmax(170px,260px) minmax(0,1fr);gap:12px;align-items:center}.new-client{width:auto;padding:11px 14px;white-space:nowrap}.search{margin:0;width:100%}.label{display:none}#clientList{display:flex;gap:7px;overflow-x:auto;min-width:0;padding:2px 0;scrollbar-width:thin}.client-item{width:auto;min-width:max-content;padding:8px 11px}.client-item small{display:none}.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
     @media(max-width:700px){header{min-height:62px;height:auto;padding:12px 14px;flex-wrap:wrap;gap:8px}header .secondary{margin-left:0!important;font-size:12px}.brand{font-size:23px}.save-state{font-size:11px;margin-left:auto}.dot{width:7px;height:7px}aside{grid-template-columns:auto minmax(0,1fr);padding:12px}.new-client{font-size:13px}#clientList{grid-column:1/-1}.top{flex-direction:column;gap:16px}.actions{width:100%}.actions button{flex:1}.grid{grid-template-columns:1fr;margin-top:22px}.client-form{grid-template-columns:1fr}.measure-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.canvas-wrap{padding:10px}.sketch-tools{padding:10px;align-items:flex-start;gap:8px}.tool-group{gap:7px;flex-wrap:wrap}.sketch-foot{font-size:11px}.notes{margin-top:18px}}
     @media(max-width:390px){header{padding:0 14px}.save-state span{display:none}section{padding-left:14px;padding-right:14px}.card-head{padding:15px}.card-head h2{font-size:18px}.card-head span{display:none}.client-form,.measurements{padding:15px}.measure-grid{grid-template-columns:1fr}.modal{padding:14px}.modal-box{padding:22px;width:100%}.modal-actions button{flex:1}.sketch-tools{flex-direction:column}.clear{padding:5px 0}.canvas-box{aspect-ratio:1}}
@@ -63,7 +62,7 @@
 
   <div class="save-state">
     <i class="dot"></i>
-    <span id="saveStatus">Saved on this device</span>
+    <span id="saveStatus">Saved on thiss device</span>
   </div>
 
   <div class="cloud-indicator" id="cloudIndicator">
@@ -140,7 +139,7 @@ let clients = []; let currentId=null, drawing=false, ctx, canvas, last={x:0,y:0}
     function draw(e){if(e.type==='pointerdown'){drawing=true;last=pos(e);canvas.setPointerCapture(e.pointerId);return}if(!drawing)return;if(e.type==='pointerup'||e.type==='pointerleave'){drawing=false;saveSketch();return}let p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.strokeStyle=document.getElementById('color').value;ctx.lineWidth=document.getElementById('size').value;ctx.lineCap='round';ctx.stroke();last=p;}
     function saveSketch(){if(current())current().sketch=canvas.toDataURL('image/png');}
     function saveCurrent(){const c=current();c.name=document.getElementById('title').value.trim()||'Untitled client';['phone','email','garment','date','style','notes'].forEach(k=>c[k]=document.getElementById(k).value);c.measurements={};document.querySelectorAll('[data-measure]').forEach(i=>c.measurements[i.dataset.measure]=i.value);
-    c.referenceCaption = document.getElementById('referenceCaption').value;c.updated='Updated '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});c.updated_at=new Date().toISOString();save();}
+    c.referenceCaption = document.getElementById('referenceCaption').value;c.updated='Updated '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});save();}
     function addReferencePhoto(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -168,10 +167,10 @@ function exportClientPDF() {
 }
     function deleteCurrent(){if(confirm(`Delete ${current().name}'s record? This cannot be undone.`)){clients=clients.filter(c=>c.id!==currentId);currentId=null;save();document.getElementById('workspace').innerHTML='<div class="placeholder"><h1>Record removed.</h1><p>Create or select a client to continue.</p></div>';}}
     document.getElementById('newBtn').onclick=()=>{document.getElementById('modal').classList.add('show');setTimeout(()=>document.getElementById('newName').focus(),0)};document.getElementById('cancel').onclick=()=>document.getElementById('modal').classList.remove('show');function create(){let n=document.getElementById('newName');let name=n.value.trim();if(!name)return n.focus();let c={id:crypto.randomUUID(),name,phone:'',email:'',garment:'',date:new Date().toISOString().slice(0,10),style:'',notes:'',measurements:{},sketch:'',
-referenceImage:'',referenceCaption:'',updated:'Just now',updated_at:new Date().toISOString()};clients.unshift(c);currentId=c.id;n.value='';document.getElementById('modal').classList.remove('show');save();openClient(c.id);}document.getElementById('create').onclick=create;document.getElementById('newName').onkeydown=e=>{if(e.key==='Enter')create()};document.getElementById('search').oninput=renderList;try{clients=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{clients=[]}renderList();if(clients.length)openClient(clients[0].id);
+referenceImage:'',referenceCaption:'',updated:'Just now'};clients.unshift(c);currentId=c.id;n.value='';document.getElementById('modal').classList.remove('show');save();openClient(c.id);}document.getElementById('create').onclick=create;document.getElementById('newName').onkeydown=e=>{if(e.key==='Enter')create()};document.getElementById('search').oninput=renderList;renderList();if(clients.length)openClient(clients[0].id);
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <template id="legacyCloudSync">
+  <script>
     /* Supabase cloud sync — paste your project values below. Never use a service_role key here. */
     (() => {
       const SUPABASE_URL = 'https://ilpldwjayyskrtqtfxfg.supabase.co';
@@ -516,109 +515,6 @@ save = function () {
         if (session) syncCloud();
       });
     })();
-  </template>
-  <script>
-    /* Corrected cloud-sync implementation. The earlier experimental block is kept
-       for compatibility, but this block owns cloud UI and synchronization. */
-    (() => {
-      const url = 'https://ilpldwjayyskrtqtfxfg.supabase.co';
-      const key = 'sb_publishable_GOVQ-RhGFDECrDyJ0xkSGw_uzr7yB_G';
-      const table = 'atelier_clients';
-      if (!window.supabase || !url || !key) return;
-
-      const client = window.supabase.createClient(url, key, { auth: { persistSession:true, autoRefreshToken:true } });
-      const header = document.querySelector('header');
-      const button = document.createElement('button');
-      button.className = 'secondary'; button.type = 'button';
-      button.style.cssText = 'margin-left:14px;min-height:34px;padding:7px 10px;white-space:nowrap;';
-      header.append(button);
-      const resend = document.createElement('button');
-      resend.className = 'secondary'; resend.type = 'button'; resend.textContent = 'Resend confirmation';
-      resend.style.cssText = 'margin-left:8px;min-height:34px;padding:7px 10px;white-space:nowrap;';
-      header.append(resend);
-
-      let timer, syncing = false, applyingRemote = false, pendingDeletes = [], signedIn = false, activeUser = null, erasing = false;
-      const baseSave = save, baseDelete = deleteCurrent;
-      const rawRenderList = renderList, rawOpenClient = openClient, rawSaveCurrent = saveCurrent;
-      const rawDraw = draw;
-      const showLanding = () => { document.getElementById('workspace').innerHTML='<div class="notepad-home"><div class="eyebrow">Adora Notes</div><h1>A calm place for every fitting.</h1><p>Your client records stay private. Sign in to view, add, edit measurements, or sketch designs for your clients.</p><button class="primary" id="landingSignIn">Sign in to your studio</button></div>'; document.getElementById('landingSignIn').onclick=()=>button.click(); };
-      const normalizeMeasurements = list => list.forEach(record => { if (record.measurement_unit === 'in') return; Object.keys(record.measurements || {}).forEach(key => { const value=String(record.measurements[key] || '').trim(); if (/^\d+(\.\d+)?$/.test(value)) record.measurements[key]=(Number(value)/2.54).toFixed(1).replace(/\.0$/,''); }); record.measurement_unit='in'; });
-      renderList = function () { if (!signedIn) { document.getElementById('clientList').innerHTML='<div class="empty-list">Sign in to view your private client records.</div>'; return; } rawRenderList(); };
-      openClient = function (id) { if (!signedIn) return showLanding(); rawOpenClient(id); document.querySelectorAll('.measurements em').forEach(el=>el.textContent='in'); const heading=document.querySelector('.measurements').closest('.card').querySelector('.card-head span'); if (heading) heading.textContent='in inches'; if (!document.getElementById('reminder')) { const reminder=document.createElement('button'); reminder.id='reminder'; reminder.className='secondary'; reminder.textContent='Set fitting reminder'; document.querySelector('.actions').prepend(reminder); } document.getElementById('reminder').onclick=()=>window.enableFittingReminder(); const tools=document.querySelector('.sketch-tools'); const erase=document.createElement('button'); erase.id='eraser'; erase.className='clear'; erase.type='button'; erase.textContent='Eraser'; tools.insertBefore(erase, tools.querySelector('#clear')); erase.onclick=()=>{ erasing=!erasing; erase.textContent=erasing?'Use ink':'Eraser'; }; const grid=document.querySelector('.measure-grid'); const add=document.createElement('div'); add.className='field full'; add.style.cssText='margin-top:8px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;'; add.innerHTML='<input id="customMeasureName" placeholder="New measurement name" /><input id="customMeasureValue" inputmode="decimal" placeholder="Value in inches" /><button class="secondary" id="addMeasurement" type="button">Add</button>'; grid.parentElement.append(add); document.getElementById('addMeasurement').onclick=()=>{ const name=document.getElementById('customMeasureName').value.trim(); const value=document.getElementById('customMeasureValue').value.trim(); if (!name) return alert('Enter a measurement name.'); if ([...document.querySelectorAll('[data-measure]')].some(input=>input.dataset.measure.toLowerCase()===name.toLowerCase())) return alert('That measurement is already on this client card.'); const unit=document.createElement('div'); unit.className='unit'; const label=document.createElement('label'); label.textContent=name; const input=document.createElement('input'); input.dataset.measure=name; input.inputMode='decimal'; input.value=value; const suffix=document.createElement('em'); suffix.textContent='in'; unit.append(label,input,suffix); grid.append(unit); document.getElementById('customMeasureName').value=''; document.getElementById('customMeasureValue').value=''; }; };
-      saveCurrent = function () { if (current()) current().measurement_unit='in'; rawSaveCurrent(); };
-      draw = function (event) { if (event.type==='pointerdown') { drawing=true; last=pos(event); canvas.setPointerCapture(event.pointerId); return; } if (!drawing) return; if (event.type==='pointerup' || event.type==='pointerleave' || event.type==='pointercancel') { drawing=false; ctx.globalCompositeOperation='source-over'; saveSketch(); return; } const point=pos(event); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(point.x,point.y); ctx.globalCompositeOperation=erasing?'destination-out':'source-over'; ctx.strokeStyle=document.getElementById('color').value; ctx.lineWidth=erasing?Math.max(12,Number(document.getElementById('size').value)*4):Number(document.getElementById('size').value); ctx.lineCap='round'; ctx.stroke(); last=point; };
-      const enhancedOpenClient = openClient;
-      openClient = function (id) { enhancedOpenClient(id); const record=current(), grid=document.querySelector('.measure-grid'); if (!record || !grid) return; Object.keys(record.measurements || {}).filter(name=>!measures.includes(name)).forEach(name=>{ const unit=document.createElement('div'); unit.className='unit'; const label=document.createElement('label'); label.textContent=name; const input=document.createElement('input'); input.dataset.measure=name; input.inputMode='decimal'; input.value=record.measurements[name] || ''; const suffix=document.createElement('em'); suffix.textContent='in'; unit.append(label,input,suffix); grid.append(unit); }); };
-      const indicator = (state, text) => { const el=document.getElementById('cloudIndicator'); el.className='cloud-indicator '+state; document.getElementById('cloudIndicatorText').textContent=text; };
-      const status = (text, state='') => { document.getElementById('saveStatus').textContent=text; indicator(state, state==='synced'?'Cloud backup up to date':state==='syncing'?'Cloud backup syncing':state==='error'?'Cloud backup needs attention':'Cloud backup not connected'); };
-      const saveLocal = () => baseSave();
-      const session = async () => (await client.auth.getSession()).data.session;
-      const keyFor = user => 'Adora-notes-' + user.id;
-      const deleteKeyFor = user => 'Adora-notes-deleted-' + user.id;
-
-      async function loadCloud(user) {
-        const {data, error} = await client.from(table).select('id,payload,updated_at').eq('user_id', user.id);
-        if (error) throw error;
-        const merged = new Map(clients.map(c => [c.id, c]));
-        for (const row of data || []) {
-          if (pendingDeletes.includes(row.id)) continue;
-          const remote = {...row.payload, updated_at: row.payload.updated_at || row.updated_at};
-          const local = merged.get(remote.id);
-          if (!local || Date.parse(remote.updated_at || 0) > Date.parse(local.updated_at || 0)) merged.set(remote.id, remote);
-        }
-        clients = [...merged.values()]; normalizeMeasurements(clients);
-        saveLocal();
-      }
-      async function pushCloud(user) {
-        if (pendingDeletes.length) {
-          const {error} = await client.from(table).delete().eq('user_id', user.id).in('id', pendingDeletes);
-          if (error) throw error;
-          pendingDeletes=[]; localStorage.removeItem(deleteKeyFor(user));
-        }
-        if (!clients.length) return;
-        const rows = clients.map(c => ({id:c.id, user_id:user.id, payload:c, updated_at:c.updated_at || new Date().toISOString()}));
-        const {data, error} = await client.from(table).upsert(rows, {onConflict:'id'}).select('id');
-        if (error) throw error;
-        if (!data || data.length !== rows.length) throw new Error('Supabase did not confirm every client record. Check the atelier_clients table policies.');
-      }
-      async function sync() {
-        if (syncing) return;
-        const s = await session(); if (!s) return;
-        syncing=true; status('Syncing securely…','syncing');
-        try { applyingRemote=true; await loadCloud(s.user); applyingRemote=false; await pushCloud(s.user); status('Synced to your private cloud','synced'); renderList(); if (currentId && current()) openClient(currentId); }
-        catch (error) { console.error('Cloud sync failed:', error); status('Cloud sync needs attention','error'); }
-        finally { applyingRemote=false; syncing=false; }
-      }
-      function schedule() { clearTimeout(timer); timer=setTimeout(sync, 700); }
-      save = function () { baseSave(); if (!applyingRemote) schedule(); };
-      window.enableFittingReminder = async function () { const c=current(); const date=document.getElementById('date')?.value; if (!c || !date) return alert('Add a fitting date first.'); c.reminderEnabled=true; c.updated_at=new Date().toISOString(); baseSave(); if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); scheduleReminders(); schedule(); alert('Reminder set for the morning of the fitting date while Adora Notes is open.'); };
-      function scheduleReminders() { clients.filter(c=>c.reminderEnabled && c.date).forEach(c=>{ const when=new Date(c.date+'T09:00:00'); const delay=when-Date.now(); if(delay>0 && delay<2147483647) setTimeout(()=>{ const text=`Fitting reminder: ${c.name} is scheduled today.`; if ('Notification' in window && Notification.permission==='granted') new Notification('Adora Notes', {body:text}); else alert(text); },delay); }); }
-      deleteCurrent = function () {
-        const removed = currentId; baseDelete();
-        if (!removed || clients.some(client=>client.id===removed)) return;
-        pendingDeletes=[...new Set([...pendingDeletes, removed])];
-        if (activeUser) localStorage.setItem(deleteKeyFor(activeUser), JSON.stringify(pendingDeletes));
-        schedule();
-      };
-      button.onclick = async () => {
-        const s=await session();
-        if (s) { if (confirm('Sign out from cloud backup on this device?')) await client.auth.signOut({scope:'local'}); return; }
-        const email=prompt('Email address for cloud backup:'); if (!email) return;
-        const password=prompt('Password (at least 6 characters):'); if (!password) return;
-        const result=confirm('Create a new account?\n\nChoose Cancel to sign in to an existing account.') ? await client.auth.signUp({email,password}) : await client.auth.signInWithPassword({email,password});
-        if (result.error) alert(result.error.message); else if (!result.data.session) alert('Check your email to confirm your account, then sign in.');
-      };
-      resend.onclick = async () => { const email=prompt('Enter the email address used for your cloud account:'); if (!email) return; const {error}=await client.auth.resend({type:'signup',email}); alert(error ? error.message : 'A fresh confirmation email has been sent.'); };
-      document.getElementById('newBtn').onclick = () => signedIn ? document.getElementById('modal').classList.add('show') : button.click();
-      document.body.classList.add('signed-out'); showLanding();
-      client.auth.onAuthStateChange((_event, s) => { setTimeout(() => { void (async () => {
-        button.textContent=s ? 'Cloud: signed in' : 'Cloud sign in';
-        if (!s) { activeUser=null; signedIn=false; clients=[]; currentId=null; document.body.classList.add('signed-out'); renderList(); showLanding(); status('Saved on this device'); return; }
-        activeUser=s.user; signedIn=true; document.body.classList.remove('signed-out'); KEY=keyFor(s.user); try { clients=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem('Adora-notes')||'[]'); } catch { clients=[]; } normalizeMeasurements(clients);
-        try { pendingDeletes=JSON.parse(localStorage.getItem(deleteKeyFor(s.user))||'[]'); } catch { pendingDeletes=[]; }
-        currentId=null; await sync(); if (clients.length) openClient(clients[0].id); else document.getElementById('workspace').innerHTML='<div class="notepad-home"><div class="eyebrow">Your private studio</div><h1>Your notepad is ready.</h1><p>Start a client card when you are ready to record measurements, fitting notes, and sketches.</p></div>'; scheduleReminders();
-      })(); }, 0); });
-    })();
   </script>
 </body>
-</html>
+</html> -->

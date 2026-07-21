@@ -265,7 +265,8 @@ console.log("Preparing rows for upload...");
     .from(CLOUD_TABLE)
     .upsert(rows, {
         onConflict: 'id,user_id'
-    });
+    })
+    .select();
 
 console.log("Uploaded rows:", data);
 

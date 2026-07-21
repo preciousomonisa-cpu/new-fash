@@ -77,7 +77,9 @@
   </main>
   <div class="modal" id="modal"><div class="modal-box"><h2>New client</h2><p>Start a lasting record for a new fitting.</p><input id="newName" placeholder="Client's full name" autofocus /><div class="modal-actions"><button class="secondary" id="cancel">Cancel</button><button class="primary" id="create">Create card</button></div></div></div>
   <script>
-    const KEY='Adora-notes-v1'; let clients=JSON.parse(localStorage.getItem(KEY)||'[]'); let currentId=null, drawing=false, ctx, canvas, last={x:0,y:0};
+    let KEY = "Adora-notes";
+
+let clients = []; let currentId=null, drawing=false, ctx, canvas, last={x:0,y:0};
     const measures=['Bust','Waist','Hip','Shoulder','Arm length','Bicep','Neck','Back length','Inseam','Outseam','Thigh','Wrist'];
     const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     function save(){localStorage.setItem(KEY,JSON.stringify(clients));document.getElementById('saveStatus').textContent='Saved on this device';renderList();}
@@ -216,27 +218,56 @@ referenceImage:'',referenceCaption:'',updated:'Just now'};clients.unshift(c);cur
       }
 
       async function getSession() {
-        if (!supabaseClient) return null;
-        const { data } = await supabaseClient.auth.getSession();
-        return data.session;
+
+    if (!supabaseClient) return null;
+
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+
+        KEY = "Adora-notes-" + data.session.user.id;
+
+        clients = JSON.parse(
+            localStorage.getItem(KEY) || "[]"
+        );
+
+    }
+
+    return data.session;
+
+}
       }
 
       async function uploadCloud() {
         const session = await getSession();
         if (!session || !clients.length) return;
 
-        const rows = clients.map(client => ({
-          id: client.id,
-          user_id: session.user.id,
-          payload: client,
-          updated_at: new Date().toISOString()
-        }));
+        const now = new Date().toISOString();
+
+const rows = clients.map(client => {
+
+    // Ensure every client has an updated_at timestamp
+    client.updated_at = client.updated_at || now;
+
+    return {
+        id: client.id,
+        user_id: session.user.id,
+        payload: client,
+        updated_at: client.updated_at
+    };
+
+});
 
         const { error } = await supabaseClient
-          .from(CLOUD_TABLE)
-          .upsert(rows, { onConflict: 'id' });
+    .from(CLOUD_TABLE)
+    .upsert(rows, {
+        onConflict: 'id,user_id'
+    });
 
-        if (error) throw error;
+                if (error) throw error;
+
+        // Everything uploaded successfully
+        hasUnsyncedChanges = false;
       }
 
       async function downloadCloud() {
@@ -244,41 +275,105 @@ referenceImage:'',referenceCaption:'',updated:'Just now'};clients.unshift(c);cur
         if (!session) return;
 
         const { data, error } = await supabaseClient
-          .from(CLOUD_TABLE)
-          .select('id, payload, updated_at')
-          .order('updated_at', { ascending: false });
+  .from(CLOUD_TABLE)
+  .select('id, payload, updated_at')
+  .eq('user_id', session.user.id)
+  .order('updated_at', { ascending: false });
 
         if (error) throw error;
 
-        const localById = new Map(clients.map(client => [client.id, client]));
-        (data || []).forEach(row => localById.set(row.id, row.payload));
-        clients = Array.from(localById.values());
-        localSave();
-      }
+        // Create a map of local clients
+const mergedClients = new Map();
 
-      async function syncCloud() {
-        try {
-          setCloudStatus('Syncing securely…');
-          await downloadCloud();
-          await uploadCloud();
-          setCloudStatus('Synced to your private cloud');
-        } catch (error) {
-          console.error(error);
-          setCloudStatus('Cloud sync needs attention');
+clients.forEach(client => {
+    mergedClients.set(client.id, client);
+});
+
+// Merge cloud clients
+(data || []).forEach(row => {
+
+    const cloudClient = row.payload;
+    const localClient = mergedClients.get(cloudClient.id);
+
+    // If the client doesn't exist locally, add it
+    if (!localClient) {
+        mergedClients.set(cloudClient.id, cloudClient);
+        return;
+    }
+
+    // Compare timestamps if they exist
+    const localTime = new Date(localClient.updated_at || 0).getTime();
+    const cloudTime = new Date(cloudClient.updated_at || row.updated_at || 0).getTime();
+
+    // Keep the newest version
+    if (cloudTime > localTime) {
+        mergedClients.set(cloudClient.id, cloudClient);
+    }
+
+});
+
+clients = [...mergedClients.values()];
+
+localSave();
+
+     async function syncCloud() {
+    try {
+
+        setCloudStatus('Syncing securely…');
+
+        const session = await getSession();
+
+        if (!session) {
+            setCloudStatus('Please sign in');
+            return;
         }
-      }
 
+        // Download the latest data from Supabase
+        await downloadCloud();
+
+        // Save the merged data locally
+        localStorage.setItem(KEY, JSON.stringify(clients));
+        renderList();
+
+if (currentId) {
+    openClient(currentId);
+}
+
+        // Upload only if there are unsynced local changes
+        if (hasUnsyncedChanges) {
+            await uploadCloud();
+        }
+
+        setCloudStatus('Synced to your private cloud');
+
+    } catch (error) {
+
+        console.error(error);
+
+        setCloudStatus('Cloud sync needs attention');
+
+    }
+}
       function queueCloudSync() {
         clearTimeout(cloudTimer);
         cloudTimer = setTimeout(syncCloud, 700);
       }
 
-      const localSave = save;
-      save = function () {
-        localSave();
-        if (supabaseClient) queueCloudSync();
-      };
+      let hasUnsyncedChanges = false;
 
+const localSave = save;
+
+save = function () {
+
+    localSave();
+
+    hasUnsyncedChanges = true;
+
+    if (supabaseClient) {
+        queueCloudSync();
+    }
+
+};
       const localDelete = deleteCurrent;
       deleteCurrent = function () {
         const deletedId = currentId;
@@ -372,10 +467,39 @@ referenceImage:'',referenceCaption:'',updated:'Just now'};clients.unshift(c);cur
         auth: { persistSession: true, autoRefreshToken: true }
       });
 
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
-        setCloudButton(session);
-        if (session) syncCloud();
-      });
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+
+    setCloudButton(session);
+
+    if (!session) {
+
+        clients = [];
+        currentId = null;
+
+        localStorage.removeItem(KEY);
+
+        renderList();
+
+        document.getElementById("workspace").innerHTML =
+        '<div class="placeholder"><h1>Please sign in.</h1></div>';
+
+        return;
+    }
+
+    clients = [];
+    currentId = null;
+
+    await downloadCloud();
+
+    renderList();
+
+    if (clients.length) {
+
+        openClient(clients[0].id);
+
+    }
+
+});
 
       getSession().then(session => {
         setCloudButton(session);

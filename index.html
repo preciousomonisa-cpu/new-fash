@@ -240,11 +240,14 @@ referenceImage:'',referenceCaption:'',updated:'Just now'};clients.unshift(c);cur
 
       async function uploadCloud() {
         const session = await getSession();
+        console.log("Current session:", session);
+console.log("Clients to upload:", clients);
         if (!session || !clients.length) return;
 
         const now = new Date().toISOString();
 
-const rows = clients.map(client => {
+console.log("Preparing rows for upload...");
+        const rows = clients.map(client => {
 
     // Ensure every client has an updated_at timestamp
     client.updated_at = client.updated_at || now;
@@ -258,13 +261,18 @@ const rows = clients.map(client => {
 
 });
 
-        const { error } = await supabaseClient
+        const { data, error } = await supabaseClient
     .from(CLOUD_TABLE)
     .upsert(rows, {
         onConflict: 'id,user_id'
     });
 
-                if (error) throw error;
+console.log("Uploaded rows:", data);
+
+if (error) {
+    console.error("Supabase upload error:", error);
+    throw error;
+}
 
         // Everything uploaded successfully
         hasUnsyncedChanges = false;
